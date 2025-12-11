@@ -270,11 +270,12 @@
                 let enhancedPrompt = '';
                 
                 if (type === 'blog') {
-                    enhancedPrompt = `16:9 Landscape format blog featured image. Subject: ${item.visual_description}. Style: High-end, premium photography featuring diverse professionals or people in modern, soft-toned environments. Lighting: Soft, warm, natural, human-centric, not cold or clinical. Colors should be muted, premium, and sophisticated (no bold or garish colors). Cinematic depth of field, 4k resolution.`;
+                    enhancedPrompt = `16:9 Landscape format blog featured image created by Nano Banana Pro. Subject: ${item.visual_description}. Style: Nano Banana Pro premium aesthetic, High-end, premium photography featuring diverse professionals or people in modern, soft-toned environments. Lighting: Soft, warm, natural, human-centric, not cold or clinical. Colors should be muted, premium, and sophisticated (no bold or garish colors). Cinematic depth of field, 4k resolution.`;
                 } else {
-                    enhancedPrompt = `Square format social media graphic. Background: High-end, premium photography featuring diverse professionals or people in modern, soft-toned environments relevant to: ${item.visual_description}. Lighting: Soft, warm, natural, human-centric, not cold or clinical. Colors in background should be muted, premium, and sophisticated (no bold or garish colors). Design: Overlaying the image is a semi-transparent (80% opacity), premium horizontal text strip or box with a smooth gradient background (fading from Bold Fuschia to Deep Purple). The background image should be faintly visible through the gradient strip. Text: "${item.hook_text}" is written clearly in White, modern sans-serif font inside this gradient strip. Style: Luxurious, soft glows, elegant gradients, high-contrast text block, minimalist.`;
+                    enhancedPrompt = `Square format social media graphic created by Nano Banana Pro. Background: High-end, premium photography featuring diverse professionals or people in modern, soft-toned environments relevant to: ${item.visual_description}. Lighting: Soft, warm, natural, human-centric, not cold or clinical. Colors in background should be muted, premium, and sophisticated (no bold or garish colors). Design: Overlaying the image is a semi-transparent (80% opacity), premium horizontal text strip or box with a smooth gradient background (fading from Bold Fuschia to Deep Purple). The background image should be faintly visible through the gradient strip. Text: "${item.hook_text}" is written clearly in White, modern sans-serif font inside this gradient strip. Style: Nano Banana Pro premium aesthetic, Luxurious, soft glows, elegant gradients, high-contrast text block, minimalist.`;
                 }
                 
+                // UPDATED: Using imagen-3.0 which is more widely supported/stable than 4.0
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${currentKey}`;
 
                 try {
@@ -287,7 +288,11 @@
                         }),
                     });
 
-                    if (!response.ok) throw new Error(`Image Gen Error: ${response.status}`);
+                    if (!response.ok) {
+                        // Capture and display the specific error from Google
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+                    }
                     
                     const result = await response.json();
                     const base64Image = result.predictions[0].bytesBase64Encoded;
@@ -296,7 +301,8 @@
                     setGeneratedImages(prev => ({ ...prev, [key]: imageUrl }));
                 } catch (err) {
                     console.error("Error generating image:", err);
-                    setError(`Failed to generate image. Please check your API key permissions or try again.`);
+                    // Show the specific error message to the user
+                    setError(`Image Generation Failed: ${err.message}`);
                 } finally {
                     setGeneratingImages(prev => ({ ...prev, [key]: false }));
                 }
